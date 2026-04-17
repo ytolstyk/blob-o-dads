@@ -1,73 +1,57 @@
-# React + TypeScript + Vite
+# Blob-o-dads
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Location-aware social web app built on **AWS Amplify Gen 2** + **React 19** + **Vite 8** + **Mantine**.
 
-Currently, two official plugins are available:
+Users appear to each other as colored, position-obfuscated circles on a Google Map within a 10-mile radius, can ping a nearby person to start an ad-hoc "Hangout" group, and see a computed centroid "meeting place" marker with an arrow from their own position.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Local setup
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+cp .env.example .env    # then fill in VITE_GOOGLE_MAPS_API_KEY
+npm run sandbox         # deploy Amplify sandbox (first time — emits amplify_outputs.json)
+npm run dev             # start Vite dev server at http://localhost:5173
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+You need a Google Maps JavaScript API key. Restrict it to your `http://localhost:5173` referrer plus the prod origin when you deploy.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Cognito SMS starts in sandbox mode — new phone numbers must be whitelisted in the Cognito console before SMS OTP will deliver.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Scripts
+
+```bash
+npm run dev              # Vite dev server with HMR
+npm run build            # tsc -b && vite build
+npm run lint             # ESLint (flat config)
+npm run preview          # serve the built bundle
+npm run sandbox          # npx ampx sandbox (deploy/watch backend)
+npm run sandbox:delete   # tear it down
 ```
+
+## Architecture
+
+```
+Routes
+  /login           phone entry + OTP verify
+  /onboarding      first-login: name, ageRange, availability, geo permission
+  /map             home: Google Map + TopNav + drawers   (AuthGuard + OnboardedGuard)
+  /groups/:id      group view: members, rename, leave/delete
+
+Amplify resources
+  amplify/backend.ts              defineBackend({ auth, data, cleanupGroups })
+  amplify/auth/resource.ts        phone + SMS OTP, 365d refresh token
+  amplify/data/resource.ts        User, Group, GroupMember, Ping
+  amplify/functions/cleanup-groups/
+     resource.ts                  schedule: 'every 5m'
+     handler.ts                   deletes empty groups + stale-solo (>1h)
+```
+
+All map tunables (poll interval, circle radius by zoom, offset magnitude, colors) live in `src/constants/map.ts` — edit freely.
+
+## Known risks
+
+- **Cognito SMS sandbox** — whitelist numbers, then request production access.
+- **Google Maps billing** — restrict the API key + set a budget alert.
+- **Privacy** — the current schema allows any authenticated user to read raw `lat/lng`. The UI obfuscates, but before public launch replace with a custom resolver that projects away coordinates and returns only the centroid.
+- **iOS Safari geolocation** — requires HTTPS + per-session permission.
+- **No ping rate-limit** in V1. Plan a per-(from,to) cooldown for V1.5.
