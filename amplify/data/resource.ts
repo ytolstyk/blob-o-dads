@@ -1,5 +1,4 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
-import { cleanupGroups } from '../functions/cleanup-groups/resource.js';
 
 const schema = a.schema({
   AgeRange: a.enum([
@@ -79,11 +78,7 @@ const schema = a.schema({
     })
     .secondaryIndexes((index) => [index('toUserId').sortKeys(['createdAt'])])
     .authorization((allow) => [allow.authenticated().to(['create', 'read'])]),
-}).authorization((allow) => [
-  // Schema-level grant so the cleanup lambda can list + delete stale groups
-  // and their memberships.
-  allow.resource(cleanupGroups).to(['query', 'mutate']),
-]);
+});
 
 export type Schema = ClientSchema<typeof schema>;
 
