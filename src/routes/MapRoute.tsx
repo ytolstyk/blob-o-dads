@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { APIProvider, Map } from '@vis.gl/react-google-maps';
+import { useEffect, useRef, useMemo, useState } from 'react';
+import { APIProvider, Map, useMap } from '@vis.gl/react-google-maps';
 import { Alert, Box } from '@mantine/core';
 import { TopNav } from '../components/TopNav';
 import { SelfMarker } from '../components/SelfMarker';
@@ -22,6 +22,18 @@ import { offsetFor } from '../lib/offset';
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from '../constants/map';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
+
+function MapCenterer({ coords }: { coords: { lat: number; lng: number } | null }) {
+  const map = useMap();
+  const centered = useRef(false);
+  useEffect(() => {
+    if (map && coords && !centered.current) {
+      map.panTo(coords);
+      centered.current = true;
+    }
+  }, [map, coords]);
+  return null;
+}
 
 export default function MapRoute() {
   const { coords, permissionDenied } = useLocationPolling();
@@ -93,8 +105,6 @@ export default function MapRoute() {
     );
   }
 
-  const center = coords ?? DEFAULT_CENTER;
-
   // Outgoing ping lines: I'm the sender; draw to the target if nearby + not yet joined by me.
   const outgoingLines = outgoing
     .filter((p) => !groupIds.has(p.groupId))
@@ -130,12 +140,13 @@ export default function MapRoute() {
       <Box style={{ flex: 1, position: 'relative' }}>
         <APIProvider apiKey={API_KEY}>
           <Map
-            defaultCenter={center}
+            defaultCenter={DEFAULT_CENTER}
             defaultZoom={DEFAULT_ZOOM}
             gestureHandling="greedy"
             disableDefaultUI={false}
             mapId="blob-o-dads-map"
           >
+            <MapCenterer coords={coords} />
             {coords && <SelfMarker coords={coords} />}
             {nearby.map((u) => (
               <UserCircle key={u.id} user={u} onClick={setSelected} />

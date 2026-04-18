@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import {
   Stack,
@@ -12,7 +12,7 @@ import {
   Paper,
   Anchor,
 } from '@mantine/core';
-import { signIn, signUp, confirmSignUp } from 'aws-amplify/auth';
+import { signIn, signUp, confirmSignUp, getCurrentUser } from 'aws-amplify/auth';
 
 type Phase = 'credentials' | 'confirm';
 type Mode = 'signin' | 'signup';
@@ -20,6 +20,12 @@ type Mode = 'signin' | 'signup';
 export default function LoginRoute() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('signin');
+
+  useEffect(() => {
+    getCurrentUser()
+      .then(() => navigate('/map', { replace: true }))
+      .catch(() => {});
+  }, [navigate]);
   const [phase, setPhase] = useState<Phase>('credentials');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
