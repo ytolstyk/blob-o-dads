@@ -3,18 +3,22 @@
 // Default center if geolocation is denied/unavailable. (SF Ferry Building.)
 export const DEFAULT_CENTER = { lat: 37.7955, lng: -122.3937 };
 
+// Deterministic offset applied to every user's displayed position so circles
+// don't stack exactly on top of each other.
+export const MAX_OFFSET_METERS = 180;
+
 // Initial zoom when the map mounts.
 export const DEFAULT_ZOOM = 14;
 
 // How often we push the user's location to their User row (ms).
-export const POLL_INTERVAL_MS = 10_000;
+export const POLL_INTERVAL_MS = 30_000;
 
 // Max distance (miles) that counts as "nearby" for rendering circles.
 export const NEARBY_RADIUS_MILES = 10;
 
 // Google Maps `<Circle>` uses METERS.
-// 400 ft ≈ 122 m, 2000 ft ≈ 610 m.
-export const MIN_CIRCLE_RADIUS_M = 122;
+// 500 ft ≈ 152 m, 2000 ft ≈ 610 m.
+export const MIN_CIRCLE_RADIUS_M = 152;
 export const MAX_CIRCLE_RADIUS_M = 610;
 
 // Piecewise-linear zoom→radius mapping. Higher zoom = closer in = smaller radius.
@@ -41,11 +45,6 @@ export function radiusForZoom(zoom: number): number {
   }
   return MIN_CIRCLE_RADIUS_M;
 }
-
-// Deterministic offset applied to every user's displayed position so circles
-// don't sit on top of their actual location. Magnitude + direction derived
-// from the userId, stable per user. Max lateral shift in METERS.
-export const MAX_OFFSET_METERS = 180;
 
 // Circle visual tuning.
 export const CIRCLE_FILL_OPACITY = 0.35;

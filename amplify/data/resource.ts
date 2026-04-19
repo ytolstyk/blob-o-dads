@@ -13,8 +13,6 @@ const schema = a.schema({
     'R_55_65',
     'R_60_PLUS',
   ]),
-  DayOfWeek: a.enum(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']),
-
   // User.userId is the Cognito sub. We look up "me" via
   // `list({ filter: { userId: { eq: sub }}})`.
   User: a
@@ -22,9 +20,6 @@ const schema = a.schema({
       userId: a.string().required(),
       name: a.string().required(),
       ageRange: a.ref('AgeRange').required(),
-      availabilityDays: a.ref('DayOfWeek').array(),
-      availabilityStart: a.string(),
-      availabilityEnd: a.string(),
       lat: a.float(),
       lng: a.float(),
       geohashPrefix: a.string(),

@@ -7,7 +7,6 @@ import {
   radiusForZoom,
 } from '../constants/map';
 import { colorFromId } from '../lib/color';
-import { offsetFor } from '../lib/offset';
 import type { NearbyUser } from '../hooks/useNearbyUsers';
 
 type Props = {
@@ -20,10 +19,9 @@ export function UserCircle({ user, onClick }: Props) {
   const circleRef = useRef<google.maps.Circle | null>(null);
 
   const { color, position } = useMemo(() => {
-    const id = user.userId ?? user.id;
     return {
-      color: colorFromId(id),
-      position: offsetFor(id, user.lat ?? 0, user.lng ?? 0),
+      color: colorFromId(user.userId ?? user.id),
+      position: { lat: user.lat ?? 0, lng: user.lng ?? 0 },
     };
   }, [user.userId, user.id, user.lat, user.lng]);
 

@@ -3,7 +3,12 @@
     "allow": [
       "Bash(npm i *)",
       "Bash(npx tsc *)",
-      "Bash(npm ls *)"
+      "Bash(npm ls *)",
+      "Bash(rtk npm *)",
+      "Bash(rtk proxy *)",
+      "Bash(./node_modules/.bin/eslint src *)",
+      "Bash(./node_modules/.bin/eslint *)",
+      "Bash(rtk git *)"
     ]
   }
 }

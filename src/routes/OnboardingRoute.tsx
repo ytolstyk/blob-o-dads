@@ -6,7 +6,6 @@ import {
   Text,
   TextInput,
   Select,
-  Chip,
   Group,
   Button,
   Alert,
@@ -14,12 +13,10 @@ import {
   Paper,
   Divider,
 } from '@mantine/core';
-import { TimeInput } from '@mantine/dates';
 import { signOut } from 'aws-amplify/auth';
 import { useMe } from '../hooks/useMe';
 import { client } from '../lib/dataClient';
 import { AGE_RANGE_OPTIONS, type AgeRangeValue } from '../constants/ageRanges';
-import { DAY_OPTIONS, type DayValue } from '../constants/days';
 
 export default function OnboardingRoute() {
   const navigate = useNavigate();
@@ -27,9 +24,6 @@ export default function OnboardingRoute() {
 
   const [name, setName] = useState('');
   const [ageRange, setAgeRange] = useState<AgeRangeValue | null>(null);
-  const [days, setDays] = useState<DayValue[]>([]);
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
   const [geoGranted, setGeoGranted] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,9 +70,6 @@ export default function OnboardingRoute() {
         userId: me.auth.userId,
         name: name.trim(),
         ageRange,
-        availabilityDays: days.length ? days : null,
-        availabilityStart: startTime || null,
-        availabilityEnd: endTime || null,
         onboardedAt: new Date().toISOString(),
       };
       await client.models.User.create(input);
@@ -124,34 +115,6 @@ export default function OnboardingRoute() {
             required
             disabled={busy}
           />
-
-          <Divider label="Availability (optional)" labelPosition="left" />
-          <Text size="sm" c="dimmed">
-            When are you generally open to hang out?
-          </Text>
-          <Chip.Group multiple value={days} onChange={(v) => setDays(v as DayValue[])}>
-            <Group gap="xs">
-              {DAY_OPTIONS.map((d) => (
-                <Chip key={d.value} value={d.value} disabled={busy}>
-                  {d.label}
-                </Chip>
-              ))}
-            </Group>
-          </Chip.Group>
-          <Group grow>
-            <TimeInput
-              label="From"
-              value={startTime}
-              onChange={(e) => setStartTime(e.currentTarget.value)}
-              disabled={busy}
-            />
-            <TimeInput
-              label="To"
-              value={endTime}
-              onChange={(e) => setEndTime(e.currentTarget.value)}
-              disabled={busy}
-            />
-          </Group>
 
           <Divider label="Location" labelPosition="left" />
           <Text size="sm" c="dimmed">

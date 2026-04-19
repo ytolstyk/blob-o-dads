@@ -3,8 +3,6 @@ import {
   Drawer,
   Group,
   Stack,
-  Text,
-  Title,
   Badge,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -12,7 +10,6 @@ import { useNavigate } from 'react-router';
 import { IconHandStop, IconUsersGroup } from '@tabler/icons-react';
 import { colorFromId } from '../lib/color';
 import { ageRangeLabel } from '../constants/ageRanges';
-import { DAY_OPTIONS, type DayValue } from '../constants/days';
 import { usePing } from '../hooks/usePing';
 import { useJoinGroup } from '../hooks/useJoinGroup';
 import type { NearbyUser } from '../hooks/useNearbyUsers';
@@ -23,23 +20,6 @@ type Props = {
   // If set, the drawer shows a "Join group" action instead of "Ping".
   joinGroupId?: string | null;
 };
-
-function formatAvailability(user: NearbyUser): string | null {
-  const days = (user.availabilityDays ?? []).filter(
-    (d): d is DayValue => d != null,
-  );
-  if (!days.length && !user.availabilityStart && !user.availabilityEnd) {
-    return null;
-  }
-  const dayLabels = days
-    .map((d) => DAY_OPTIONS.find((o) => o.value === d)?.label ?? d)
-    .join(', ');
-  const time =
-    user.availabilityStart && user.availabilityEnd
-      ? `${user.availabilityStart}–${user.availabilityEnd}`
-      : null;
-  return [dayLabels, time].filter(Boolean).join(' · ');
-}
 
 export function UserDrawer({ user, onClose, joinGroupId }: Props) {
   const navigate = useNavigate();
@@ -85,7 +65,6 @@ export function UserDrawer({ user, onClose, joinGroupId }: Props) {
     }
   };
 
-  const availability = user ? formatAvailability(user) : null;
   const color = user ? colorFromId(user.userId ?? user.id) : undefined;
 
   return (
@@ -113,18 +92,6 @@ export function UserDrawer({ user, onClose, joinGroupId }: Props) {
               {ageRangeLabel(user.ageRange)}
             </Badge>
           </Group>
-          {availability ? (
-            <div>
-              <Title order={6}>Availability</Title>
-              <Text size="sm" c="dimmed">
-                {availability}
-              </Text>
-            </div>
-          ) : (
-            <Text size="sm" c="dimmed">
-              No availability set.
-            </Text>
-          )}
           {joinGroupId ? (
             <Button
               leftSection={<IconUsersGroup size={16} />}
