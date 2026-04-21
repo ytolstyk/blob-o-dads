@@ -3,7 +3,7 @@ import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend-function/runtime';
 import { env } from '$amplify/env/fetch-venues';
-import type { Schema } from '../../data/resource';
+import type { Schema } from '../../data/resource.js';
 
 type Args = { lat: number; lng: number };
 type Result = string[];
@@ -120,7 +120,7 @@ export const handler: AppSyncResolverHandler<Args, Result> = async (event) => {
           googlePlaceId,
           venueUpdatedAt: new Date().toISOString(),
         });
-        if (created) venueIds.push(created.id);
+        if (created) venueIds.push((created as { id: string }).id);
       }
     }
   }

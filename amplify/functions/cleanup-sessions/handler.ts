@@ -3,13 +3,13 @@ import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend-function/runtime';
 import { env } from '$amplify/env/cleanup-sessions';
-import type { Schema } from '../../data/resource';
+import type { Schema } from '../../data/resource.js';
 
 const PENDING_TTL_MS = 3 * 60 * 60 * 1000;
 const ACTIVE_GRACE_MS = 2 * 60 * 60 * 1000;
 
 export const handler: EventBridgeHandler<'Scheduled Event', unknown, void> = async () => {
-  const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
+  const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env as Parameters<typeof getAmplifyDataClientConfig>[0]);
   Amplify.configure(resourceConfig, libraryOptions);
   const client = generateClient<Schema>();
 
