@@ -1,6 +1,6 @@
 import { AdvancedMarker } from '@vis.gl/react-google-maps';
 import { IconUserFilled } from '@tabler/icons-react';
-import type { Coords } from '../hooks/useLocationPolling';
+import type { Coords } from '../hooks/useCurrentLocation';
 
 export function SelfMarker({ coords }: { coords: Coords }) {
   return (

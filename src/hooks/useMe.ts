@@ -55,7 +55,7 @@ export function useMe(): Me {
 
   useEffect(() => {
     if (!auth) return;
-    // Live-update the profile (location, name edits, etc.).
+    // Live-update the profile when name changes.
     const sub = client.models.User.observeQuery({
       filter: { userId: { eq: auth.userId } },
     }).subscribe({

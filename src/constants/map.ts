@@ -3,60 +3,33 @@
 // Default center if geolocation is denied/unavailable. (SF Ferry Building.)
 export const DEFAULT_CENTER = { lat: 37.7955, lng: -122.3937 };
 
-// Deterministic offset applied to every user's displayed position so circles
-// don't stack exactly on top of each other.
-export const MAX_OFFSET_METERS = 180;
-
 // Initial zoom when the map mounts.
 export const DEFAULT_ZOOM = 14;
 
-// How often we push the user's location to their User row (ms).
-export const POLL_INTERVAL_MS = 30_000;
-
-// Max distance (miles) that counts as "nearby" for rendering circles.
-export const NEARBY_RADIUS_MILES = 10;
-
-// Google Maps `<Circle>` uses METERS.
-// 500 ft ≈ 152 m, 2000 ft ≈ 610 m.
-export const MIN_CIRCLE_RADIUS_M = 152;
-export const MAX_CIRCLE_RADIUS_M = 610;
-
-// Piecewise-linear zoom→radius mapping. Higher zoom = closer in = smaller radius.
-// Anchors are interpolated; values outside the range clamp to the end anchor.
-// Tweak freely.
-export const ZOOM_RADIUS_ANCHORS: Array<[zoom: number, radiusM: number]> = [
-  [18, MIN_CIRCLE_RADIUS_M],
-  [15, 200],
-  [12, 400],
-  [10, MAX_CIRCLE_RADIUS_M],
-];
-
-export function radiusForZoom(zoom: number): number {
-  const anchors = [...ZOOM_RADIUS_ANCHORS].sort((a, b) => a[0] - b[0]);
-  if (zoom <= anchors[0][0]) return anchors[0][1];
-  if (zoom >= anchors[anchors.length - 1][0]) return anchors[anchors.length - 1][1];
-  for (let i = 0; i < anchors.length - 1; i++) {
-    const [z0, r0] = anchors[i];
-    const [z1, r1] = anchors[i + 1];
-    if (zoom >= z0 && zoom <= z1) {
-      const t = (zoom - z0) / (z1 - z0);
-      return r0 + (r1 - r0) * t;
-    }
-  }
-  return MIN_CIRCLE_RADIUS_M;
-}
-
 // Circle visual tuning.
-export const CIRCLE_FILL_OPACITY = 0.35;
 export const CIRCLE_STROKE_OPACITY = 0.8;
 
-// Polylines (ping/group lines).
-export const LINE_WEIGHT = 3;
-export const LINE_OPACITY = 0.9;
+// Fixed radius for venue circles (venues are places, not blobs).
+export const VENUE_CIRCLE_RADIUS_M = 80;
 
-// 4-char geohash ≈ 20km cell. Self + 8 neighbors covers a 10-mile radius
-// with margin. See src/lib/geohash.ts for the query helper.
-export const GEOHASH_PRECISION = 4;
+// Radius used by the fetch-venues lambda for the Places API search.
+export const VENUE_SEARCH_RADIUS_MILES = 10;
+
+// Fill color by venue type.
+export const VENUE_COLORS: Record<string, string> = {
+  PARK: '#4caf50',
+  CAFE: '#ff9800',
+  LIBRARY: '#2196f3',
+  MALL: '#9c27b0',
+};
+
+// Fill opacity driven by current interest count.
+export function venueOpacity(count: number, isActive: boolean): number {
+  if (isActive) return 0.85;
+  if (count >= 2) return 0.6;
+  if (count === 1) return 0.4;
+  return 0.2;
+}
 
 // HSL seed so colors read as bright but not neon.
 export const COLOR_HSL_SATURATION = 65;

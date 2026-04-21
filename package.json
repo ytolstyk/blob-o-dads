@@ -23,7 +23,6 @@
     "@vis.gl/react-google-maps": "^1.8.3",
     "aws-amplify": "^6.16.4",
     "dayjs": "^1.11.20",
-    "ngeohash": "^0.6.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router": "^7.14.1"
@@ -32,7 +31,6 @@
     "@aws-amplify/backend": "^1.2.1",
     "@aws-amplify/backend-cli": "^1.8.2",
     "@eslint/js": "^9.39.4",
-    "@types/ngeohash": "^0.6.8",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

@@ -11,15 +11,9 @@ import {
 import { IconLogout, IconUserEdit, IconDotsVertical } from '@tabler/icons-react';
 import { signOut } from 'aws-amplify/auth';
 import { EditProfileModal } from './EditProfileModal';
-import { NotificationBell } from './NotificationBell';
 import { useMe } from '../hooks/useMe';
-import type { Ping } from '../hooks/usePingInbox';
 
-type Props = {
-  onSelectPing?: (ping: Ping) => void;
-};
-
-export function TopNav({ onSelectPing }: Props = {}) {
+export function TopNav() {
   const navigate = useNavigate();
   const me = useMe();
   const [editOpen, setEditOpen] = useState(false);
@@ -44,7 +38,6 @@ export function TopNav({ onSelectPing }: Props = {}) {
           <Text fw={600}>{me.profile?.name ?? 'Blob-o-dads'}</Text>
         </Group>
         <Group gap="xs">
-          <NotificationBell onSelectPing={onSelectPing} />
           <Button
             variant="light"
             size="xs"

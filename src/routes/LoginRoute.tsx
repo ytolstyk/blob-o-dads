@@ -5,77 +5,70 @@ import {
   Title,
   Text,
   TextInput,
-  PasswordInput,
   Button,
   Alert,
   Center,
   Paper,
   Anchor,
 } from '@mantine/core';
-import { signIn, signUp, confirmSignUp, getCurrentUser } from 'aws-amplify/auth';
+import { signIn, confirmSignIn, getCurrentUser } from 'aws-amplify/auth';
 
-type Phase = 'credentials' | 'confirm';
-type Mode = 'signin' | 'signup';
+type Phase = 'phone' | 'otp';
+
+function toE164(raw: string): string | null {
+  const digits = raw.replace(/\D/g, '');
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits[0] === '1') return `+${digits}`;
+  if (raw.trim().startsWith('+') && digits.length >= 7) return `+${digits}`;
+  return null;
+}
 
 export default function LoginRoute() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>('signin');
+  const [phase, setPhase] = useState<Phase>('phone');
+  const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     getCurrentUser()
       .then(() => navigate('/map', { replace: true }))
       .catch(() => {});
   }, [navigate]);
-  const [phase, setPhase] = useState<Phase>('credentials');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [code, setCode] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  async function submitCredentials() {
+  async function submitPhone() {
+    const e164 = toE164(phone);
+    if (!e164) {
+      setError('Enter a valid phone number (e.g. +1 555 123 4567).');
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
-      const normalized = email.trim().toLowerCase();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
-        throw new Error('Enter a valid email address');
-      }
-      if (mode === 'signin') {
-        await signIn({ username: normalized, password });
-        navigate('/map', { replace: true });
-      } else {
-        await signUp({
-          username: normalized,
-          password,
-          options: { userAttributes: { email: normalized } },
-        });
-        setPhase('confirm');
-      }
+      await signIn({
+        username: e164,
+        options: { authFlowType: 'USER_AUTH', preferredChallenge: 'SMS_OTP' },
+      });
+      setPhase('otp');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : 'Could not send code.');
     } finally {
       setBusy(false);
     }
   }
 
-  async function submitConfirmation() {
+  async function submitOtp() {
     setBusy(true);
     setError(null);
     try {
-      await confirmSignUp({ username: email.trim().toLowerCase(), confirmationCode: code });
-      await signIn({ username: email.trim().toLowerCase(), password });
+      await confirmSignIn({ challengeResponse: code.trim() });
       navigate('/map', { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid code');
+      setError(err instanceof Error ? err.message : 'Invalid code.');
     } finally {
       setBusy(false);
     }
-  }
-
-  function toggleMode() {
-    setMode((m) => (m === 'signin' ? 'signup' : 'signin'));
-    setError(null);
   }
 
   return (
@@ -83,77 +76,68 @@ export default function LoginRoute() {
       <Paper withBorder p="xl" radius="md" w={420} maw="100%">
         <Stack>
           <Title order={2}>Welcome to Blob-o-dads</Title>
-          {phase === 'credentials' && (
+          {phase === 'phone' && (
             <>
               <Text c="dimmed" size="sm">
-                {mode === 'signin' ? 'Sign in to your account.' : 'Create a new account.'}
+                Enter your phone number to receive a one-time code.
               </Text>
               <TextInput
-                label="Email address"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.currentTarget.value)}
-                type="email"
+                label="Phone number"
+                placeholder="+1 555 123 4567"
+                description="US numbers: enter 10 digits. International: include country code."
+                value={phone}
+                onChange={(e) => setPhone(e.currentTarget.value)}
+                type="tel"
                 autoFocus
-                disabled={busy}
-              />
-              <PasswordInput
-                label="Password"
-                placeholder="Your password"
-                value={password}
-                onChange={(e) => setPassword(e.currentTarget.value)}
                 disabled={busy}
               />
               {error && <Alert color="red">{error}</Alert>}
               <Button
-                onClick={submitCredentials}
+                onClick={submitPhone}
                 loading={busy}
-                disabled={!email || !password}
+                disabled={!phone.trim()}
                 fullWidth
               >
-                {mode === 'signin' ? 'Sign in' : 'Create account'}
+                Send code
               </Button>
-              <Text size="sm" ta="center">
-                {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
-                <Anchor component="button" onClick={toggleMode}>
-                  {mode === 'signin' ? 'Sign up' : 'Sign in'}
-                </Anchor>
-              </Text>
             </>
           )}
-          {phase === 'confirm' && (
+          {phase === 'otp' && (
             <>
               <Text c="dimmed" size="sm">
-                We sent a verification code to {email}. Enter it below to confirm your account.
+                We sent a 6-digit code to {phone}. Enter it below.
               </Text>
               <TextInput
-                label="Verification code"
+                label="One-time code"
                 placeholder="123456"
                 value={code}
                 onChange={(e) => setCode(e.currentTarget.value)}
                 autoFocus
                 disabled={busy}
+                maxLength={6}
               />
               {error && <Alert color="red">{error}</Alert>}
               <Button
-                onClick={submitConfirmation}
+                onClick={submitOtp}
                 loading={busy}
-                disabled={!code}
+                disabled={code.trim().length < 6}
                 fullWidth
               >
-                Confirm account
+                Verify
               </Button>
-              <Button
-                variant="subtle"
+              <Anchor
+                component="button"
+                size="sm"
+                ta="center"
                 onClick={() => {
-                  setPhase('credentials');
+                  setPhase('phone');
                   setCode('');
                   setError(null);
                 }}
                 disabled={busy}
               >
-                Back
-              </Button>
+                ← Change number
+              </Anchor>
             </>
           )}
         </Stack>

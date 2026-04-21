@@ -8,7 +8,9 @@
       "Bash(rtk proxy *)",
       "Bash(./node_modules/.bin/eslint src *)",
       "Bash(./node_modules/.bin/eslint *)",
-      "Bash(rtk git *)"
+      "Bash(rtk git *)",
+      "Bash(git *)",
+      "Bash(rtk lint *)"
     ]
   }
 }
