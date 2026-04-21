@@ -1,7 +1,7 @@
 import type { AppSyncResolverHandler } from 'aws-lambda';
 import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
-import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
+import { getAmplifyDataClientConfig } from '@aws-amplify/backend-function/runtime';
 import { env } from '$amplify/env/fetch-venues';
 import type { Schema } from '../../data/resource';
 
@@ -49,7 +49,7 @@ function closingTimeMs(periods: Period[] | undefined): number | null {
 }
 
 export const handler: AppSyncResolverHandler<Args, Result> = async (event) => {
-  const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
+  const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env as Parameters<typeof getAmplifyDataClientConfig>[0]);
   Amplify.configure(resourceConfig, libraryOptions);
   const client = generateClient<Schema>();
 

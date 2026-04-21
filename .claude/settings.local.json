@@ -10,7 +10,10 @@
       "Bash(./node_modules/.bin/eslint *)",
       "Bash(rtk git *)",
       "Bash(git *)",
-      "Bash(rtk lint *)"
+      "Bash(rtk lint *)",
+      "Bash(node *)",
+      "Bash(npm install *)",
+      "Bash(npm show *)"
     ]
   }
 }
