@@ -1,10 +1,13 @@
-import { defineAuth } from '@aws-amplify/backend';
+import { defineAuth } from "@aws-amplify/backend";
 
 export const auth = defineAuth({
   loginWith: {
-    phone: true,
+    email: {
+      otpLogin: true,
+    },
   },
+  groups: ["dads"],
   userAttributes: {
-    phoneNumber: { required: true, mutable: false },
+    email: { required: true, mutable: true },
   },
 });

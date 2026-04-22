@@ -13,20 +13,12 @@ import {
 } from '@mantine/core';
 import { signIn, confirmSignIn, getCurrentUser } from 'aws-amplify/auth';
 
-type Phase = 'phone' | 'otp';
-
-function toE164(raw: string): string | null {
-  const digits = raw.replace(/\D/g, '');
-  if (digits.length === 10) return `+1${digits}`;
-  if (digits.length === 11 && digits[0] === '1') return `+${digits}`;
-  if (raw.trim().startsWith('+') && digits.length >= 7) return `+${digits}`;
-  return null;
-}
+type Phase = 'email' | 'otp';
 
 export default function LoginRoute() {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState<Phase>('phone');
-  const [phone, setPhone] = useState('');
+  const [phase, setPhase] = useState<Phase>('email');
+  const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,18 +29,18 @@ export default function LoginRoute() {
       .catch(() => {});
   }, [navigate]);
 
-  async function submitPhone() {
-    const e164 = toE164(phone);
-    if (!e164) {
-      setError('Enter a valid phone number (e.g. +1 555 123 4567).');
+  async function submitEmail() {
+    const trimmed = email.trim();
+    if (!trimmed || !trimmed.includes('@')) {
+      setError('Enter a valid email address.');
       return;
     }
     setBusy(true);
     setError(null);
     try {
       await signIn({
-        username: e164,
-        options: { authFlowType: 'USER_AUTH', preferredChallenge: 'SMS_OTP' },
+        username: trimmed,
+        options: { authFlowType: 'USER_AUTH', preferredChallenge: 'EMAIL_OTP' },
       });
       setPhase('otp');
     } catch (err) {
@@ -76,26 +68,25 @@ export default function LoginRoute() {
       <Paper withBorder p="xl" radius="md" w={420} maw="100%">
         <Stack>
           <Title order={2}>Welcome to Blob-o-dads</Title>
-          {phase === 'phone' && (
+          {phase === 'email' && (
             <>
               <Text c="dimmed" size="sm">
-                Enter your phone number to receive a one-time code.
+                Enter your email to receive a one-time code.
               </Text>
               <TextInput
-                label="Phone number"
-                placeholder="+1 555 123 4567"
-                description="US numbers: enter 10 digits. International: include country code."
-                value={phone}
-                onChange={(e) => setPhone(e.currentTarget.value)}
-                type="tel"
+                label="Email address"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.currentTarget.value)}
+                type="email"
                 autoFocus
                 disabled={busy}
               />
               {error && <Alert color="red">{error}</Alert>}
               <Button
-                onClick={submitPhone}
+                onClick={submitEmail}
                 loading={busy}
-                disabled={!phone.trim()}
+                disabled={!email.trim()}
                 fullWidth
               >
                 Send code
@@ -105,7 +96,7 @@ export default function LoginRoute() {
           {phase === 'otp' && (
             <>
               <Text c="dimmed" size="sm">
-                We sent a 6-digit code to {phone}. Enter it below.
+                We sent a 6-digit code to {email}. Enter it below.
               </Text>
               <TextInput
                 label="One-time code"
@@ -130,13 +121,13 @@ export default function LoginRoute() {
                 size="sm"
                 ta="center"
                 onClick={() => {
-                  setPhase('phone');
+                  setPhase('email');
                   setCode('');
                   setError(null);
                 }}
                 disabled={busy}
               >
-                ← Change number
+                ← Change email
               </Anchor>
             </>
           )}
